@@ -1,0 +1,25 @@
+﻿@implements IAsyncDisposable
+@inject IJSRuntime _jsRuntime
+
+<canvas @ref="_chartContainer"></canvas>
+
+@code {
+    private ElementReference _chartContainer;
+    private IJSObjectReference _module;
+
+    [Parameter] public ChartData Data { get; set; }
+    [Parameter] public string Type { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _module = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./js/chart-wrapper.js");
+        }
+
+        await _module.InvokeVoidAsync("buildChart", _chartContainer, Type, Data);
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+        => await _module.DisposeAsync();
+}
